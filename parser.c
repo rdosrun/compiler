@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "hash.h"
 #include "tokenizer.h"
 
 char * Program_name;
@@ -20,19 +19,38 @@ int declaration(){
 int initalization(int lookup, int val){
 
 }
-int write(char * value){
-    FILE *fptr;
-    if(Program_name == NULL){
-        fptr = fopen("output.asm", "a");
-    }else{
-        fptr = fopen(Program_name+".asm", "a");
+char ** equation_parse(char ** tokens){
+    //go through parentecies and make a stack of equations in order
+    char ** equation_list = malloc(sizeof(char *)*MAX_TOKENS);
+    int i =0;
+    int j =0;
+    while(tokens[i]!=NULL){
+        if(tokens[i][0]=='('){
+               char ** tmp2 = malloc(sizeof(char *)*MAX_TOKENS);
+               j =i+1;
+               while(tokens[j]!=NULL){
+                    tmp2[j-i]=tokens[j];
+                    //printf("%s\n",tmp2[j-i]);
+                    j++;
+               }
+               char ** tmp = equation_parse(tmp2);
+               j =0;
+               while(tmp[j]!=NULL){
+                    equation_list[j]=tmp[j];
+                    printf("%s\n",equation_list[j]);
+                    j++;
+               }
+               j++;
+
+        }else if(tokens[i][0]==')'){
+            return equation_list;
+        }
+        equation_list[j] = tokens[i];
+        i++;
     }
-    fprintf(fptr, "%s", value);
-    fclose(fptr);
-
-
+    return equation_list;
 }
-int process(char ** tokens){
+int process (char ** tokens){
     if(tokens[0] == "Program"){
         Program_name = tokens[1];
     }else if(tokens[0] == "var"){
@@ -40,7 +58,7 @@ int process(char ** tokens){
     }else if (tokens[0] == "begin"){
         mode = 2;
     }else if(tokens[0] == "end"){
-        return;
+        return 0;
     }else{
         if(mode == 1){
             int i = 0;
@@ -50,13 +68,22 @@ int process(char ** tokens){
                    continue;
                 }else{
                    //insert into hash map
-
+                    insert(tokens[i],(address_counter++)*4);
                    //insert memory address
                }
            }
+        }else{
+            char ** tmp = equation_parse(tokens);
+            int i =0;
+            while(tmp[i]!=NULL){
+                printf("%s\n",tokens[i++]);
+            }
+
+            //process math equations
+            //
         }
     }
-
+    return 0;
 }
 
 int read(){
@@ -70,12 +97,22 @@ int read(){
     while ((read = getline(&line, &len, fptr)) != -1) {
         // do stuff with line
         char ** tokens = tokenize(line);
+        int i=0;
+        char ** tmp = equation_parse(tokens);
+        /*while(tokens[i]!=NULL){
+            printf("%s\n",tokens[i++]);
+        }
+        //printf("===================================\n");
+            i =0;
+            while(tmp[i]!=NULL){
+                printf("%s\n",tokens[i++]);
+            }*/
         //proccess tokens
     }
     fclose(fptr);
 }
 
-int main(int argc, char *argv[]){
+int main (int argc, char * argv[]){
     //make hashmap
 
     //three parts of program
@@ -86,9 +123,10 @@ int main(int argc, char *argv[]){
     //2 assignment initalization
     //
     //3 execution
-
-    declaration();
+    read();
+    //declaration();
     printf("hello world\n");
+    return 0;
 }
 
 
